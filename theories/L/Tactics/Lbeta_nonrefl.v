@@ -50,11 +50,11 @@ iLtac redSimpl' s x t:=
 
 Ltac Lbeta_old := cbn [subst' Init.Nat.eqb].
 
-Lemma subst'_int (X:Set) (ty : TT X) (f:X) (H : computable f) : forall x t, subst' (ext f) x t = (ext f).
+Lemma subst'_int (X:Type) (ty : TT X) (f:X) (H : computable f) : forall x t, subst' (ext f) x t = (ext f).
 Proof.
 intros. apply subst'_cls. Lproc.
 Qed.
-(*
+  (*
 Lemma subst'_enc Y  (H:encodable  Y): forall y x t, subst' (enc y) x t = (enc y).
 Proof.
   intros. apply subst'_cls. Lproc.

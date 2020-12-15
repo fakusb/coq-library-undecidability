@@ -162,18 +162,19 @@ Definition tmArgsOfConstructor ind i :=
 
 (*  Classes for computable terms and (Scott-) encodable types *)
 
+#[ universes(polymorphic, cumulative) ]
 Class extracted {A : Type} (a : A) := int_ext : L.term.
 Arguments int_ext {_} _ {_}.
 Typeclasses Transparent extracted. (* This is crucial to use this inside monads  *)
 Hint Extern 0 (extracted _) => progress (cbn [Common.my_projT1]): typeclass_instances. 
 
+#[ universes(polymorphic, cumulative) ]
 Class encodable (X : Type) := mk_encodable
   {
     enc : X -> L.term ; (* the encoding function for X *)
     proc_enc : forall x, proc (enc x) ; (* encodings need to be a procedure *)
   }.
 Hint Mode encodable + : typeclass_instances. (* treat argument as input and force evar-freeness*)
-
 Arguments enc : simpl never.  (* Never unfold with cbn/simpl *)
 
 (* Construct quoted L terms and natural numbers *)
@@ -211,14 +212,14 @@ Fixpoint insert_params fuel Params i t :=
   end end.
 
 
-Definition tmGetOption {X} (o : option X) (err : string) : TemplateMonad X :=
+Definition tmGetOption {X:Type} (o : option X) (err : string) : TemplateMonad X :=
   match o with
   | Some x => ret x
   | None => tmFail err
   end.
 
 
-Definition tmGetMyOption {X} (o : option_instance X) (err : string) : TemplateMonad X :=
+Definition tmGetMyOption {X:Type} (o : option_instance X) (err : string) : TemplateMonad X :=
   match o with
   | my_Some x => ret x
   | my_None => tmFail err
@@ -530,7 +531,7 @@ Definition tmUnfoldTerm {A}(a:A) :=
   | _ => ret t
   end.
 
-Polymorphic Definition tmExtract (nm : option string) {A} (a : A) : TemplateMonad (extracted a) :=
+Definition tmExtract (nm : option string) {A} (a : A) : TemplateMonad (extracted a) :=
   q <- tmUnfoldTerm a ;;
   t <- extract (fun x => x) q FUEL ;;
   match nm with

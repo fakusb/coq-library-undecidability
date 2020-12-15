@@ -625,7 +625,7 @@ Lemma cast_computableTime X Y `{encodable Y} (cast : X -> Y):
 Proof.
   cbn.
   pose (t:=lam 0).
-  computable using t. solverec. Unshelve.
+  computable using t. solverec.
 Defined. (* because ? *)
 
 

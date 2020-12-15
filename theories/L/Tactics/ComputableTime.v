@@ -1,6 +1,7 @@
 From Undecidability.L Require Export Tactics.Computable.
 
 (* ** Time bounds *)
+Set Universe Polymorphism.
 
 Fixpoint timeComplexity t (tt: TT t) : Type :=
   match tt with
@@ -11,7 +12,7 @@ Fixpoint timeComplexity t (tt: TT t) : Type :=
 Arguments timeComplexity : clear implicits.
 Arguments timeComplexity _ {_}.
 
-Fixpoint computesTime {t} (ty : TT t) :  forall (x:t) (xInt :term) (xTime :timeComplexity t), Type :=
+Fixpoint computesTime {t:Type} (ty : TT t) :  forall (x:t) (xInt :term) (xTime :timeComplexity t), Type :=
   match ty with
     !_ => fun x xInt _=> xInt = enc x
   | @TyArr t1 t2 tt1 tt2 =>
@@ -25,7 +26,7 @@ Fixpoint computesTime {t} (ty : TT t) :  forall (x:t) (xInt :term) (xTime :timeC
 
 Arguments computesTime {_} _ _ _ _.
 
-Class computableTime {X : Type} (ty : TT X) (x : X) evalTime: Type :=
+Cumulative Class computableTime {X : Type} (ty : TT X) (x : X) evalTime: Type :=
   {
     extT : extracted x;
     extTCorrect : computesTime ty x extT evalTime
@@ -53,7 +54,7 @@ Local Fixpoint notHigherOrder t (ty : TT t) :=
   | _ => False
   end.
 
-Local Lemma computesTime_computes_intern s t (ty: TT t) f evalTime:
+Local Lemma computesTime_computes_intern s (t:Type) (ty: TT t) f evalTime:
   notHigherOrder ty -> computesTime ty f s evalTime -> computes ty f s.
 Proof.
   revert s f.
@@ -68,7 +69,7 @@ Proof.
    exists v. split. eapply redLe_star_subrelation. all:eauto.
 Defined. (* because ? *)
 
-Lemma computableTime_computable X (ty : TT X) (x:X) fT :
+Lemma computableTime_computable (X:Type) (ty : TT X) (x:X) fT :
   notHigherOrder ty -> computableTime x fT -> computable x.
 Proof.
   intros H I. eexists (extT x). destruct I. eapply computesTime_computes_intern. all:eauto.
@@ -78,7 +79,7 @@ Hint Extern 10 (@computable ?t ?ty ?f) =>
 (solve [let H:= fresh "H" in eassert (H : @computableTime t ty f _) by exact _;
                         ( (exact (computableTime_computable (ty:=ty) Logic.I H))|| idtac "Can not derive computable instance from computableTime for higher-order-function" f)]): typeclass_instances.
 
-Lemma computesTimeProc t (ty : TT t) (f : t) fInt fT:
+Lemma computesTimeProc (t:Type) (ty : TT t) (f : t) fInt fT:
   computesTime ty f fInt fT-> proc fInt.
 Proof.
   destruct ty.
@@ -101,7 +102,7 @@ Proof.
   unfold extT. now destruct H.
 Qed.
 
-Instance extTApp' t1 t2 {tt1:TT t1} {tt2 : TT t2} (f: t1 -> t2) (x:t1) fT xT (Hf : computableTime f fT) (Hx : computableTime x xT) : computableTime (f x) (snd (fT x xT)).
+Instance extTApp' (t1 t2:Type) {tt1:TT t1} {tt2 : TT t2} (f: t1 -> t2) (x:t1) fT xT (Hf : computableTime f fT) (Hx : computableTime x xT) : computableTime (f x) (snd (fT x xT)).
 Proof. 
   destruct Hf as [fInt H], Hx as [xInt xInts].
   eexists (projT1 ((snd H) x xInt xT xInts)). 
@@ -110,7 +111,7 @@ Proof.
   eassumption. 
 Defined. (* because ? *)
 
-Lemma extTApp t1 t2 {tt1:TT t1} {tt2 : TT t2} (f: t1 -> t2) (x:t1) fT xT (Hf : computableTime f fT) (Hx : computableTime x xT) :
+Lemma extTApp (t1 t2:Type) {tt1:TT t1} {tt2 : TT t2} (f: t1 -> t2) (x:t1) fT xT (Hf : computableTime f fT) (Hx : computableTime x xT) :
   app (extT f) (extT x) >(<= fst (evalTime f x (evalTime x))) extT (f x).
 Proof.
   unfold extT.
@@ -118,14 +119,14 @@ Proof.
   destruct (fInts x xInt xT xInts) as (v&E&fxInts). apply E.
 Qed.
 
-Lemma extT_is_enc t1 (R:encodable t1) (x: t1) xT (Hf : computableTime x xT) :
+Lemma extT_is_enc (t1:Type) (R:encodable t1) (x: t1) xT (Hf : computableTime x xT) :
   @extT _ _ x xT Hf = enc x.
 Proof.
   unfold extT. 
   destruct Hf. assumption.
 Defined. (* because ? *)
 
-Lemma computesTimeTyArr_helper t1 t2 (tt1 : TT t1) (tt2 : TT t2) f fInt time fT:
+Lemma computesTimeTyArr_helper (t1 t2:Type) (tt1 : TT t1) (tt2 : TT t2) f fInt time fT:
   proc fInt
   ->
   (forall (y : t1) yT,
@@ -145,23 +146,23 @@ Proof.
   apply evalLe_eval_subrelation in E. split. rewrite <- E. apply app_closed. apply H0. apply computesTimeProc in yInts. apply yInts. apply E. 
 Qed.
 
-Definition computesTimeIf {t} (ty : TT t) (f:t) (fInt : term) (P:timeComplexity t-> Prop) : Type :=
+Definition computesTimeIf {t:Type} (ty : TT t) (f:t) (fInt : term) (P:timeComplexity t-> Prop) : Type :=
   forall fT, P fT -> computesTime ty f fInt fT.
 Arguments computesTimeIf {_} _ _ _ _.
 
 
-Lemma computesTimeIfStart t1 (tt1 : TT t1) (f : t1) (fInt : term) P fT:
+Lemma computesTimeIfStart (t1:Type) (tt1 : TT t1) (f : t1) (fInt : term) P fT:
   computesTimeIf tt1 f fInt P -> P fT -> computesTime tt1 f fInt fT.
 Proof.
   intros ?. cbn. eauto.
 Qed.
 
-Definition computesTimeExp {t} (ty : TT t) (f:t) (s:term) (i:nat) (fInt : term) (fT:timeComplexity t) : Type :=
+Definition computesTimeExp {t:Type} (ty : TT t) (f:t) (s:term) (i:nat) (fInt : term) (fT:timeComplexity t) : Type :=
   evalLe i s fInt * computesTime ty f fInt fT.
 
 Arguments computesTimeExp {_} _ _ _ _ _ _.
   
-Lemma computesTimeExpStart t1 (tt1 : TT t1) (f : t1) (fInt : term) fT:
+Lemma computesTimeExpStart (t1:Type) (tt1 : TT t1) (f : t1) (fInt : term) fT:
   proc fInt ->
   {v :term & computesTimeExp tt1 f fInt 0 v fT}  -> computesTime tt1 f fInt fT.
 Proof.
@@ -169,7 +170,7 @@ Proof.
   edestruct n. destruct e as ([]&?&?). assumption. inv H0. 
 Qed.
 
-Lemma computesTimeExpStep t1 t2 (tt1 : TT t1) (tt2 : TT t2) (f : t1 -> t2) (s:term) k k' fInt fT:
+Lemma computesTimeExpStep (t1 t2:Type) (tt1 : TT t1) (tt2 : TT t2) (f : t1 -> t2) (s:term) k k' fInt fT:
   k' = k -> evalIn k' s fInt -> closed s -> 
   (forall (y : t1) (yInt : term) yT, computesTime tt1 y yInt yT
                                 -> {v : term & computesTimeExp tt2 (f y) (app s yInt) (fst (fT y yT) +k) v (snd (fT y yT))}%type) ->
@@ -185,7 +186,7 @@ Proof.
 Qed.
 
 
-Lemma computesTimeExt X (tt : TT X) (x x' : X) s fT:
+Lemma computesTimeExt (X:Type) (tt : TT X) (x x' : X) s fT:
   extEq x x' -> computesTime tt x s fT -> computesTime tt x' s fT.
 Proof.
   induction tt in x,x',s,fT |-*;intros eq.
@@ -198,20 +199,20 @@ Proof.
    apply eq.
 Qed.
 
-Lemma computableTimeExt X (tt : TT X) (x x' : X) fT:
+Lemma computableTimeExt (X:Type) (tt : TT X) (x x' : X) fT:
   extEq x x' -> computableTime x fT -> computableTime x' fT.
 Proof.
   intros ? [s ?]. eexists. eauto using computesTimeExt.
 Defined. (* because ? *)
 
-Fixpoint changeResType_TimeComplexity t1 (tt1 : TT t1) Y {R: encodable Y} {struct tt1}:
+Fixpoint changeResType_TimeComplexity (t1:Type) (tt1 : TT t1) Y {R: encodable Y} {struct tt1}:
   forall (fT: timeComplexity t1) , @timeComplexity _ (projT2 (changeResType tt1 (TyB Y))):= (
   match tt1 with
     @TyB t1 tt1 => fun fT => fT
   | TyArr _ _ tt11 tt12 => fun fT x xT => (fst (fT x xT),changeResType_TimeComplexity (snd (fT x xT)))
   end).
 
-Lemma cast_registeredAs_TimeComplexity t1 (tt1 : TT t1) Y (R: encodable Y) fT (cast : projT1 (resType tt1) -> Y) (f:t1)
+Lemma cast_registeredAs_TimeComplexity (t1:Type) (tt1 : TT t1) Y (R: encodable Y) fT (cast : projT1 (resType tt1) -> Y) (f:t1)
 :
   projT2 (resType tt1) = registerAs cast ->
   computableTime (ty:=projT2 (changeResType tt1 (TyB Y))) (insertCast R cast f) (changeResType_TimeComplexity fT)->
@@ -228,12 +229,12 @@ Proof.
    eapply IHtt1_2. all:eassumption.
 Qed.
     
-Definition cnst {X} (x:X):nat. Proof. exact 0. Qed.
+Definition cnst {X:Type} (x:X):nat. Proof. exact 0. Qed.
 
-Definition callTime X (fT : X -> unit -> nat * unit) x: nat := fst (fT x tt). 
+Definition callTime (X:Type) (fT : X -> unit -> nat * unit) x: nat := fst (fT x tt). 
 Arguments callTime / {_}.
  
-Definition callTime2 X Y
+Definition callTime2 (X Y:Type)
            (fT : X -> unit -> nat * (Y -> unit -> nat * unit)) x y : nat :=
   let '(k,f):= fT x tt in k + fst (f y tt).
 Arguments callTime2 / {_ _}.
@@ -246,7 +247,7 @@ Fixpoint timeComplexity_leq (t : Type) (tt : TT t) {struct tt} : timeComplexity 
     fun f f' : timeComplexity (_ -> _) => forall (x:t1) xT, (fst (f x xT)) <= (fst (f' x xT)) /\ timeComplexity_leq (snd (f x xT)) (snd (f' x xT))
   end.
 
-Lemma computesTime_timeLeq X (tt : TT X) x s fT fT':
+Lemma computesTime_timeLeq (X:Type) (tt : TT X) x s fT fT':
   timeComplexity_leq fT fT' -> computesTime tt x s fT -> computesTime tt x s fT'.
 Proof.
   induction tt in x,s,fT,fT' |-*;intros eq.
@@ -259,7 +260,7 @@ Proof.
    +eauto.
 Qed.
 
-Lemma computableTime_timeLeq X (tt : TT X) (x:X) fT fT':
+Lemma computableTime_timeLeq (X:Type) (tt : TT X) (x:X) fT fT':
   timeComplexity_leq fT fT' -> computableTime x fT -> computableTime x fT'.
 Proof.
   intros ? []. eexists. eapply computesTime_timeLeq. all:easy.

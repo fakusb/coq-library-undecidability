@@ -93,7 +93,8 @@ Proof.
   induction u in s |- *; intros Hs Hu; cbn -[many_vars].
   - reflexivity.
   - unfold apply_encs_to. rewrite many_vars_S. cbn. unfold apply_encs_to in IHu. rewrite <- IHu.
-    fold (apply_encs_to (ext L.app s (ext (@enc X _) n)) n).
+    assert (H':= eq_refl (x:= apply_encs_to (ext L.app s (ext (@enc X _) n)) n)).
+    unfold apply_encs_to in H' at 1. rewrite H'. clear H'.
     rewrite subst_apply_encs_to. 2:lia. unfold apply_encs_to. repeat f_equal.
     cbn. repeat (rewrite subst_closed; [| now Lproc]). now rewrite Nat.eqb_refl.
     assert (closed h) as Hh. eapply Hu. econstructor. Lproc. intros. eapply Hu. now econstructor.
@@ -136,9 +137,11 @@ Proof using Hcmp.
       2:{ clear. induction v; cbn; intros ? Hi. inversion Hi. inv Hi. Lproc. eapply IHv. eapply Eqdep_dec.inj_pair2_eq_dec in H2. subst. eauto. eapply nat_eq_dec. }
       2:{ clear. induction v; cbn; intros ? Hi. inversion Hi. inv Hi. Lproc. eapply IHv. eapply Eqdep_dec.inj_pair2_eq_dec in H2. subst. eauto. eapply nat_eq_dec. }
       repeat (eapply equiv_app_proper; try reflexivity). clear.
-      fold (@apply_encs_to (enc (s (enc h))) n). fold (apply_encs_to (ext L.app (enc s) (ext (@enc X _) n)) n).
-      rewrite subst_apply_encs_to. cbn. repeat (rewrite subst_closed; [ | now Lproc]). rewrite Nat.eqb_refl.
-      rewrite !many_subst_apply_encs_to.
+      fold (@apply_encs_to (enc (s (enc h))) n).
+      assert (H':= eq_refl (x:= apply_encs_to (ext L.app (enc s) (ext (@enc X _) n)) n)).
+      unfold apply_encs_to in H' at 1. rewrite H'. clear H'.
+      rewrite subst_apply_encs_to. cbn. do 3 (rewrite subst_closed; [ | now Lproc]). rewrite Nat.eqb_refl.
+      setoid_rewrite many_subst_apply_encs_to.
       * rewrite equiv_fold_left. reflexivity. now Lsimpl.
       * Lproc.
       * clear. induction v; cbn; intros ? Hi. inversion Hi. inv Hi. Lproc. eapply IHv. eapply Eqdep_dec.inj_pair2_eq_dec in H2. subst. eauto. eapply nat_eq_dec. 

@@ -199,13 +199,13 @@ Tactic Notation "Lrewrite" "in" hyp(_H) :=
     | _ >* _ => idtac "not supported yet"
   end.
 
-Lemma ext_rel_helper X `(H:encodable X) (x:X) (inst : computable x) (R: term -> term -> Prop) u:
+Polymorphic Lemma ext_rel_helper (X:Type) `(H:encodable X) (x:X) (inst : computable x) (R: term -> term -> Prop) u:
   R (enc x) u -> R (@ext _ _ _ inst) u.
 Proof.
   now rewrite ext_is_enc.
 Qed.
 
-Lemma extT_rel_helper X `(H:encodable X) (x:X) xT (inst : computableTime x xT) (R: term -> term -> Prop) u:
+Polymorphic Lemma extT_rel_helper (X:Type) `(H:encodable X) (x:X) xT (inst : computableTime x xT) (R: term -> term -> Prop) u:
   R (enc x) u -> R (@extT _ _ _ _ inst) u.
 Proof.
   now rewrite extT_is_enc.
@@ -352,6 +352,7 @@ Ltac LrewriteSimpl'' canReduceFlag :=
   | |- ?R ?s _  => has_no_evar s;(* idtac "recurse to" s; *)
 
   repeat' (idtac;
+    (*lazymatch goal with |- ?G => idtac "at " G end;*)
     lazymatch goal with
     | |- _ (lam _) _ => fail
     | |- _ (enc _) _ => fail

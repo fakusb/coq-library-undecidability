@@ -24,7 +24,7 @@ Qed.
 
 (* ** Extracted tuple encoding *)
 
-Instance term_prod_enc X Y (R1:encodable X) (R2:encodable Y) t__X t__Y
+Instance term_prod_enc (X Y:Type) (R1:encodable X) (R2:encodable Y) t__X t__Y
          `{computableTime' (@enc X _) t__X} `{computableTime' (@enc Y _) t__Y}
   :computableTime' (enc (X:=X*Y)) (fun w _ => (let '(x,y):= w in  fst (t__X x tt) + fst (t__Y y tt) + 15,tt)).
 Proof.
@@ -33,7 +33,7 @@ Proof.
 Qed.
 
 
-Instance term_list_enc X (R:encodable X) t__X 
+Instance term_list_enc (X:Type) (R:encodable X) t__X 
          `{computableTime' (@enc X _) t__X} 
   :computableTime' (enc (X:=list X)) (fun l _ => (sumn (map (fun x => fst (t__X x tt) + 17) l) + 12,tt)).
 Proof.
@@ -43,7 +43,7 @@ Qed.
 
 Import LOptions.
 
-Instance term_option_enc X (R:encodable X) t__X 
+Instance term_option_enc (X:Type) (R:encodable X) t__X 
          `{computableTime' (@enc X _) t__X} 
   :computableTime' (enc (X:=option X)) (fun x _ => (match x with Some x => fst (t__X x tt) | _ => 0 end + 15,tt)).
 Proof.

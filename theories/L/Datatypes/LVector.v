@@ -134,7 +134,7 @@ Proof.
   intros ? ?. eapply vector_eqb_spec. all:eauto using eqb_spec.
 Qed.
 
-Global Instance eqbComp_List X `{encodable X} `{eqbCompT X (R:=_)} n:
+Global Instance eqbComp_List (X:Type) `{encodable X} `{eqbCompT X (R:=_)} n:
   eqbCompT (Vector.t X n).
 Proof.
   evar (c:nat). exists c. edestruct term_vector_eqb with (X:=X). now eauto using comp_eqb.
@@ -154,7 +154,7 @@ Proof.
    1:{ enough (10<= c). nia. shelve. }
    specialize (IHl l').
    unfold eqbTime at 1.
-   enough (10+c__eqbComp X<= c ). nia. shelve.
+   enough (10+c__eqbComp X<= c ). unfold Extract.enc in *. nia. shelve.
   [c]:exact (c__eqbComp X + 10).
    Unshelve. all:subst c. all:nia.
 Qed.

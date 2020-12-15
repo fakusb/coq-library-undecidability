@@ -6,6 +6,7 @@ Require Import Undecidability.Shared.Libs.PSL.Bijection String.
 (* Typeclass for registering types *)
 
 (* Encodable is in GenEncode *)
+Set Universe Polymorphism.
 
 Class encInj (X : Type) `(R : encodable X) := 
   inj_enc : injective (X:=X) enc (* encoding is injective *).
@@ -21,7 +22,6 @@ Inductive TT : Type -> Type :=
   TyB t (R : encodable t) : TT t
 | TyArr t1 t2 (tt1 : TT t1) (tt2 : TT t2)
   : TT (t1 -> t2).
-
 Existing Class TT.
 Existing Instance TyB.
 Existing Instance TyArr.
@@ -34,7 +34,6 @@ Hint Mode TT + : typeclass_instances. (* treat argument as input and force evar-
 Notation "! X" := (TyB X) (at level 69).
 Notation "X ~> Y" := (TyArr X Y) (right associativity, at level 70).
 
-
 Fixpoint computes {A} (tau : TT A) {struct tau}: A -> L.term -> Type :=
   match tau with
     !_ => fun x xInt => (xInt = enc x)
@@ -45,7 +44,7 @@ Fixpoint computes {A} (tau : TT A) {struct tau}: A -> L.term -> Type :=
         ->  {v : term & (app t_f t_a >* v) * computes tau2 (f a) v}
   end%type.
 
-Lemma computesProc t (ty : TT t) (f : t) fInt:
+Lemma computesProc (t:Type) (ty : TT t) (f : t) fInt:
   computes ty f fInt -> proc fInt.
 Proof.
   destruct ty.
@@ -54,7 +53,7 @@ Proof.
 Qed.
 
 (* This is for a user to give an definition *)
-Class computable X {ty : TT X} (x : X) : Type :=
+Cumulative Class computable X {ty : TT X} (x : X) : Type :=
   {
     ext : extracted x;
     extCorrect : computes ty x ext;
@@ -69,7 +68,7 @@ Hint Extern 4 (@extracted ?t ?f) => let ty := constr:(_ : TT t) in notypeclasses
 
 Typeclasses Opaque ext.
 
-Lemma proc_ext X (ty : TT X) (x : X) ( H : computable x) : proc (ext x).
+Lemma proc_ext (X:Type) (ty : TT X) (x : X) ( H : computable x) : proc (ext x).
 Proof.
   unfold ext. destruct H. apply (computesProc extCorrect0). 
 Qed.
